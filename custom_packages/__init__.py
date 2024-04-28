@@ -143,7 +143,3 @@ class ImageProcessor(object):
         
 
 
-class Trainer(object):
-    
-    def __init__(self):
-        pass
