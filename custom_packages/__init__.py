@@ -3,12 +3,11 @@ import os
 
 import cv2
 
-import mtcnn
+
 import numpy as np
 
 from PIL import Image
 
-mtcnn_detector = mtcnn.MTCNN()
 
 class ImageProcessor(object):
     
@@ -21,9 +20,7 @@ class ImageProcessor(object):
     
     found_face_data = None
     
-    processed_image = None
-    
-    
+    processed_image = np.array([])
     
     
     def __init__(self, src,output_folder, detector):
@@ -35,22 +32,39 @@ class ImageProcessor(object):
         self.image_raw = cv2.imread(src)
         
         
+        #detect face
+        self.get_face()
+        
+        #align face
+        self.align_face()
+        
+        #crop face
+        self.crop_to_facebox()
+        
+        #resize
+        self.image_resize(target_size=160)
+        
+        #store image
+        self.store_processed_image()
+        
+        
     def get_face(self):
         
         
         #first face found
-        found_faces_data = self.face_detector(self.image_raw)
+        found_faces_data = self.face_detector.detect_faces(self.image_raw)
         
         is_face_found = len(found_faces_data) > 0
         
         if is_face_found:
             self.found_face_data = found_faces_data[0]
+            print(self.found_face_data)
 
         return found_faces_data[0] if is_face_found else None
     
 
     def crop_to_facebox(self):
-        x,y,w,h = self.found_face_data
+        x,y,w,h = self.found_face_data["box"]
         
         #cropping the image at face box coordinates
         cropped_frame = self.image_raw[y:y+h, x:x+w]
@@ -78,6 +92,8 @@ class ImageProcessor(object):
         #rotating the image by the angle 
         pil_image = Image.fromarray(self.processed_image)
         aligned_image = np.array(pil_image.rotate(-1*rotation_angle))
+        
+        self.processed_image = aligned_image
 
         return aligned_image
     
@@ -100,4 +116,18 @@ class ImageProcessor(object):
         return resized_image
     
     def store_processed_image(self):
-        cv2.imwrite(os.path.join(self.output_folder, os.path.basename(self.src)))
+        cv2.imwrite(os.path.join(self.output_folder, os.path.basename(self.src)), self.processed_image)
+
+        
+    
+    def show_processed_image(self):
+        
+        if np.size(self.processed_image) > 0:
+            cv2.imshow("processed image", self.processed_image)
+        
+            
+        else:
+            cv2.imshow("only raw available", self.image_raw)
+            
+        cv2.waitKey(0)
+        cv2.destroyAllWindows()
