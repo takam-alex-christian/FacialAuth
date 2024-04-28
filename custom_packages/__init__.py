@@ -3,6 +3,7 @@ import os
 
 import cv2
 
+import mtcnn
 
 import numpy as np
 
@@ -11,9 +12,10 @@ from PIL import Image
 
 class ImageProcessor(object):
     
-    face_detector = None
+    face_detector = mtcnn.MTCNN()
     
     image_src = ""
+    
     output_folder = ""
     
     image_raw = None
@@ -23,10 +25,9 @@ class ImageProcessor(object):
     processed_image = np.array([])
     
     
-    def __init__(self, src,output_folder, detector, keep_ratio: True):
+    def __init__(self, src,output_folder, keep_ratio: True):
         self.src = src
         self.output_folder = output_folder
-        self.face_detector = detector
         
         #load image
         self.image_raw = cv2.imread(src)
@@ -124,7 +125,9 @@ class ImageProcessor(object):
     def store_processed_image(self):
         cv2.imwrite(os.path.join(self.output_folder, os.path.basename(self.src)), self.processed_image)
 
-        
+    
+    def get_process_image(self): # just returns processed image as a numpy array
+        return self.processed_image
     
     def show_processed_image(self):
         
@@ -137,3 +140,10 @@ class ImageProcessor(object):
             
         cv2.waitKey(0)
         cv2.destroyAllWindows()
+        
+
+
+class Trainer(object):
+    
+    def __init__(self):
+        pass

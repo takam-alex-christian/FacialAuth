@@ -11,4 +11,7 @@ face_detector = mtcnn.MTCNN()
 output_folder = f"{os.path.join(os.getcwd(), "test","test_out")}"
 src = f"{os.path.join(os.getcwd(), "test","test_in", "im1.jpg")}"
 
-im_processor = custom_packages.ImageProcessor(output_folder= output_folder, src=src, detector=face_detector, keep_ratio=False)
+im_processor = custom_packages.ImageProcessor(output_folder= output_folder, src=src, keep_ratio=False)
+print(im_processor.processed_image)
+
+
