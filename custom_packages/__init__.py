@@ -23,7 +23,7 @@ class ImageProcessor(object):
     processed_image = np.array([])
     
     
-    def __init__(self, src,output_folder, detector):
+    def __init__(self, src,output_folder, detector, keep_ratio: True):
         self.src = src
         self.output_folder = output_folder
         self.face_detector = detector
@@ -42,7 +42,7 @@ class ImageProcessor(object):
         self.crop_to_facebox()
         
         #resize
-        self.image_resize(target_size=160)
+        self.image_resize(target_size=160, keep_ratio=keep_ratio)
         
         #store image
         self.store_processed_image()
@@ -98,18 +98,24 @@ class ImageProcessor(object):
         return aligned_image
     
     #image resize function
-    def image_resize(self,target_size=160):
+    def image_resize(self,target_size=160, keep_ratio = True):
         #
         (image_height, image_width) = self.processed_image.shape[:2]
 
         k = image_width/float(image_height) #proportionality constant
+        
+        if keep_ratio:
                     
-        if image_height > image_width:
-            resized_image = cv2.resize(self.processed_image, (int(k*target_size),target_size),interpolation=cv2.INTER_AREA)
-        elif image_height < image_width:
-            resized_image = cv2.resize(self.processed_image, (target_size, int(target_size/k)), interpolation=cv2.INTER_AREA)
+            if image_height > image_width:
+                resized_image = cv2.resize(self.processed_image, (int(k*target_size),target_size),interpolation=cv2.INTER_AREA)
+            elif image_height < image_width:
+                resized_image = cv2.resize(self.processed_image, (target_size, int(target_size/k)), interpolation=cv2.INTER_AREA)
+            else:
+                resized_image = self.processed_image
+            
+            
         else:
-            resized_image = self.processed_image
+            resized_image = cv2.resize(self.processed_image, (target_size, target_size), interpolation=cv2.INTER_AREA)
         
         self.processed_image = resized_image
         
