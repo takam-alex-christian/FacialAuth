@@ -5,6 +5,21 @@ from custom_packages import ImageProcessor
 import numpy as np
 import os
 
+import cv2
+
+from sklearn.svm import SVC
+from sklearn.preprocessing import LabelEncoder
+
+from skimage.transform import resize
+from keras_facenet import FaceNet
+
+
+
+
+#load pretrained facenet model
+
+facenet_model = FaceNet()
+
 # import 
 
 #setup rootine

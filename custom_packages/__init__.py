@@ -39,7 +39,7 @@ class ImageProcessor(object):
         #align face
         self.align_face()
         
-        #crop face
+        #crop face     
         self.crop_to_facebox()
         
         #resize
