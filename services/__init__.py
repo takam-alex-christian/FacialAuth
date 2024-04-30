@@ -41,6 +41,20 @@ class UserManager(object):
         else:
             return json_util.dumps(self.users_collection.find_one({"_id": ObjectId(user_id)}))
     
+    def get_users_id(self):
+        """
+        :return: [user id as strings]
+        """
+        
+        output_list = []
+        
+        queried_users = self.users_collection.find()
+        
+        for user in queried_users:
+            output_list.append(str(user["_id"]))
+        
+        return output_list
+    
     def delete(self, user_id):
         
         pass
