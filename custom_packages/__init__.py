@@ -36,11 +36,11 @@ class ImageProcessor(object):
         #detect face
         self.get_face()
         
-        #align face
-        self.align_face()
-        
         #crop face     
         self.crop_to_facebox()
+        
+        #align face
+        self.align_face()
         
         #resize
         self.image_resize(target_size=160, keep_ratio=keep_ratio)
@@ -122,11 +122,15 @@ class ImageProcessor(object):
         
         return resized_image
     
+    def get_reshaped_dims(self):
+        self.processed_image = np.expand_dims(self.processed_image,axis=0)
+        return self.processed_image
+    
     def store_processed_image(self):
         cv2.imwrite(os.path.join(self.output_folder, os.path.basename(self.src)), self.processed_image)
-
+        return self.processed_image
     
-    def get_process_image(self): # just returns processed image as a numpy array
+    def get_processed_image(self): # just returns processed image as a numpy array
         return self.processed_image
     
     def show_processed_image(self):
@@ -141,5 +145,3 @@ class ImageProcessor(object):
         cv2.waitKey(0)
         cv2.destroyAllWindows()
         
-
-
