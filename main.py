@@ -1,10 +1,15 @@
-from flask import Flask
+import bson.objectid
+from flask import Flask, jsonify, request
+from flask_cors import CORS, cross_origin
 
-#
-from custom_packages import ImageProcessor
+import bson
+
+# from custom_packages import ImageProcessor
 from services import UserManager
 
 import numpy as np
+import io, base64
+from PIL import Image as PilImage
 import os
 
 from sklearn.svm import SVC
@@ -29,22 +34,49 @@ create neccesary folders
 mongo_client = MongoClient("mongodb://127.0.0.1:27017/?directConnection=true&serverSelectionTimeoutMS=2000&appName=mongosh+2.2.5")
 mongo_fa_db = mongo_client["facialAuth"]
 
-user_manager = UserManager(mongo_db=mongo_fa_db)
+raw_folder_path = os.path.join(os.getcwd(), "res", "raw")
+prepped_folder_path = os.path.join(os.getcwd(), "res", "prepped")
 
 app = Flask(__name__)
+
+user_manager = UserManager(mongo_db=mongo_fa_db)
 
 @app.route('/', methods=['GET'])
 def index():
     return "hello world"
 
+CORS(app, support_credentials=True)
+
 @app.route("/signup", methods=["POST"])
+@cross_origin(supports_credentials=True)
 def signup_handler():
-    sample_user = user_manager.create_user(user_data={"username": "Eric"})
-    print(sample_user)
+    
+    json_data = request.json
+    print("that's too bad to habndle")
+    
+    new_user_id = str(user_manager.create_user(user_data={"username": "bosive"}))
+    
+    if not(os.path.exists(os.path.join(raw_folder_path, new_user_id))):
+        os.mkdir(os.path.join(raw_folder_path, new_user_id))
+        
+    for base64Image in json_data.get("images"):
+        base64Image = str(base64Image)
+        base64Image = base64Image.split("data:image/jpeg;base64,")[-1]
+        
+        image_id = bson.objectid.ObjectId()
+        
+        img = PilImage.open(io.BytesIO(base64.decodebytes(bytes(base64Image, "utf-8"))))
+        
+        img.save(f'{os.path.join(raw_folder_path, new_user_id)}\\{str(image_id)}.jpeg')
+        
+        print(f'{os.path.join(raw_folder_path, new_user_id)}\\{str(image_id)}.jpeg')
+    
     return "user created"
+
 
 @app.route("/login", methods=["GET"])
 def login_handler():
+    user_manager = UserManager(mongo_db=mongo_fa_db)
     user_found = user_manager.get_user(user_id="6630fd7d1026f3a5a7387450")
     
     return user_found
