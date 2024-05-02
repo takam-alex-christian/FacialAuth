@@ -23,34 +23,36 @@ from pymongo import MongoClient
 raw_folder_path = os.path.join(os.getcwd(), "res", "raw")
 prepped_folder_path = os.path.join(os.getcwd(), "res", "prepped")
 
-def prep():
+def prep(user_id: str = ""):
     """
-        returns an array of embeddings and user_ids as a tuple
+        returns an array of embeddings and user_id as a tuple
     """
     
-    users_ids = []
-    users_face_embedings = []
-    
-    user_manager = UserManager(mongo_db=mongo_fa_db)
-    
-    users_ids = user_manager.get_users_id()
-    
-    #load all images 
-    for user_id in users_ids:
+    if len(user_id) is not 0:
+        user_ids = []
+        user_face_embedings = []
+        
+        #load all images 
         image_filenames =[]
         dir_list = os.listdir(os.path.join(raw_folder_path, user_id))
-        
-        image_filenames = [f for f in dir_list if f.endswith(".jpeg") or f.endswith(".jpg")]
-        
-        for im_file in image_filenames:
             
+        image_filenames = [f for f in dir_list if f.endswith(".jpeg") or f.endswith(".jpg")]
+            
+        for im_file in image_filenames:
+                
             processor = ImageProcessor(src=os.path.join(raw_folder_path, user_id,im_file), output_folder=os.path.join(prepped_folder_path, user_id), keep_ratio=False)
 
-
-    #             print(facenet_model.embeddings(processor.get_reshaped_dims()))
-    
-    
-    return []
+            if processor.found_face_data is not None:
+                user_ids.append(user_id)
+                
+                face_embedding = facenet_model.embeddings(processor.get_reshaped_dims())
+                
+                user_face_embedings.append(face_embedding)
+        
+        
+        return (user_ids, user_face_embedings)
+    else:
+        return ([], [])
 
 
 facenet_model = FaceNet() #facenet512
@@ -98,7 +100,8 @@ def signup_handler():
     
     #retrain
     
-    prep()
+    trainDataSet = prep(new_user_id)
+    print(trainDataSet)
     
     return "user created"
 
@@ -110,11 +113,11 @@ def login_handler():
     
     return user_found
 
-sample_user_id = "0"
+# sample_user_id = "0"
 
-sample_user_raw_folder = os.path.join(os.getcwd(), "res", "raw", f"id_{0}")
+# sample_user_raw_folder = os.path.join(os.getcwd(), "res", "raw", f"id_{0}")
 
-sample_user_prepped_folder = os.path.join(os.getcwd(), "res", "prepped", f"id_{0}")
+# sample_user_prepped_folder = os.path.join(os.getcwd(), "res", "prepped", f"id_{0}")
 
-labels = []
-face_embeddings = []
+# labels = []
+# face_embeddings = []
