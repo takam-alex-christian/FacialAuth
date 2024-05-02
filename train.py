@@ -86,6 +86,14 @@ le, classifier = trainer()
 
 test_emb = prepz_test_frame()
 
+
+
+joblib.dump(le, f"{os.path.join(os.getcwd(), "svm_model")}\\le.gz")
+joblib.dump(classifier, f"{os.path.join(os.getcwd(), "svm_model")}\\classifier.gz")
+
+# le = joblib.load(f"{os.path.join(os.getcwd(), "svm_model")}\\le.gz")
+# classifier = joblib.load(f"{os.path.join(os.getcwd(), "svm_model")}\\classifier.gz")
+
 prediction = le.inverse_transform(classifier.predict(test_emb))
 
 print(prediction)
