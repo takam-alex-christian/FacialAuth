@@ -25,28 +25,33 @@ class ImageProcessor(object):
     processed_image = np.array([])
     
     
-    def __init__(self, src,output_folder, keep_ratio: True):
+    def __init__(self, src,output_folder, keep_ratio: False):
         self.src = src
         self.output_folder = output_folder
         
+        if not(os.path.exists(self.output_folder)):
+            os.mkdir(self.output_folder)
+        
         #load image
         self.image_raw = cv2.imread(src)
+        self.processed_image = np.array(self.image_raw)
         
         
         #detect face
         self.get_face()
         
-        #crop face     
-        self.crop_to_facebox()
-        
-        #align face
-        self.align_face()
-        
-        #resize
-        self.image_resize(target_size=160, keep_ratio=keep_ratio)
-        
-        #store image
-        self.store_processed_image()
+        if self.found_face_data is not None:
+            #crop face     
+            self.crop_to_facebox()
+            
+            #align face
+            self.align_face()
+            
+            #resize
+            self.image_resize(target_size=160, keep_ratio=keep_ratio)
+            
+            #store image
+            self.store_processed_image()
         
         
     def get_face(self):
@@ -59,12 +64,18 @@ class ImageProcessor(object):
         
         if is_face_found:
             self.found_face_data = found_faces_data[0]
+            
             print(self.found_face_data)
+            print(self.output_folder)
 
         return found_faces_data[0] if is_face_found else None
     
 
     def crop_to_facebox(self):
+        
+        if not (self.found_face_data):
+            return self.processed_image
+        
         x,y,w,h = self.found_face_data["box"]
         
         #cropping the image at face box coordinates
@@ -78,6 +89,10 @@ class ImageProcessor(object):
 
     #face alignment function
     def align_face(self):
+        
+        if not(self.found_face_data):
+            return self.processed_image
+        
         left_eye = self.found_face_data["keypoints"]["left_eye"]
         right_eye = self.found_face_data["keypoints"]["right_eye"]
         
