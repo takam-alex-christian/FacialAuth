@@ -25,12 +25,13 @@ class ImageProcessor(object):
     processed_image = np.array([])
     
     
-    def __init__(self, src,output_folder, keep_ratio: False):
+    def __init__(self, src,output_folder="", keep_ratio= False):
         self.src = src
         self.output_folder = output_folder
         
-        if not(os.path.exists(self.output_folder)):
-            os.mkdir(self.output_folder)
+        if len(self.output_folder) != 0:
+            if not(os.path.exists(self.output_folder)):
+                os.mkdir(self.output_folder)
         
         #load image
         self.image_raw = cv2.imread(src)
@@ -50,8 +51,9 @@ class ImageProcessor(object):
             #resize
             self.image_resize(target_size=160, keep_ratio=keep_ratio)
             
-            #store image
-            self.store_processed_image()
+            if len(self.output_folder) != 0:
+                #store image
+                self.store_processed_image()
         
         
     def get_face(self):

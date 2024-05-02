@@ -58,4 +58,46 @@ class UserManager(object):
     def delete(self, user_id):
         
         pass
+
+
+
+
+class EmbeddingManager(object):
     
+    mongo_db = None
+    mongo_emb_collection = None
+    
+    def __init__(self, mongo_db= None):
+        
+        self.mongo_db = mongo_db
+        self.mongo_emb_collection = self.mongo_db["embeddings"]
+        
+        pass
+    
+    
+    def create_embedding(self, ie: dict):
+        """
+        
+        :param ie: {user_id: string, embeddings: [[]]}
+        """
+        print(ie)
+        self.mongo_emb_collection.insert_one({"user_id": ie["user_id"], "embeddings": ie["embeddings"]})
+    
+    def read_embedding(self, user_id: str):
+        """
+        :param user_id: stringified version of the _id objectId from users collection
+        :return : {user_id: str, embeddings: [[numbers]]}
+        """
+        
+        fetched_emb = self.mongo_emb_collection.find({"user_id": user_id}, {"user_id": 1, "embeddings": 1 }) # as 
+        
+        output_emb = [emb["embeddings"] for emb in fetched_emb]
+        
+        
+        return output_emb
+    
+    def read_all_embedding(self): # not proven indispensible yet
+        pass
+    
+    def delete_embedding(self, user_id): #not proven absolutely neccesary yet
+        pass

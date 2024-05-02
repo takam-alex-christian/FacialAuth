@@ -5,7 +5,7 @@ from flask_cors import CORS, cross_origin
 import bson
 
 from custom_packages import ImageProcessor
-from services import UserManager
+from services import UserManager, EmbeddingManager
 
 import numpy as np
 import io, base64
@@ -23,36 +23,35 @@ from pymongo import MongoClient
 raw_folder_path = os.path.join(os.getcwd(), "res", "raw")
 prepped_folder_path = os.path.join(os.getcwd(), "res", "prepped")
 
-def prep(user_id: str = ""):
-    """
-        returns an array of embeddings and user_id as a tuple
-    """
+def svm_train_classifier():
+    user_ids = []
+    embeddings = []
     
-    if len(user_id) is not 0:
-        user_ids = []
-        user_face_embedings = []
+    user_manager = UserManager(mongo_db=mongo_fa_db)
+    emb_manager = EmbeddingManager(mongo_db=mongo_fa_db)
+    
+    for user_id in user_manager.get_users_id():
+        user_emb_dict = emb_manager.read_embedding(user_id=user_id) # user_emb is a dict such that {user_id: str, embedding: [[numbers]]}
         
-        #load all images 
-        image_filenames =[]
-        dir_list = os.listdir(os.path.join(raw_folder_path, user_id))
-            
-        image_filenames = [f for f in dir_list if f.endswith(".jpeg") or f.endswith(".jpg")]
-            
-        for im_file in image_filenames:
-                
-            processor = ImageProcessor(src=os.path.join(raw_folder_path, user_id,im_file), output_folder=os.path.join(prepped_folder_path, user_id), keep_ratio=False)
+        fetched_emb_list = np.asarray(user_emb_dict)
+        
+        print(fetched_emb_list)
+        
+        # user_ids.extend([user_id] * len(fetched_emb_list))
+        # embeddings.append(user_emb_dict)
+        
+        # le = LabelEncoder().fit(user_ids)
+        
+        # y = le.transform(user_ids)
+        
+        # classifier = SVC(kernel='linear', probability=True).fit(embeddings, y)
+        
+    
+    # print(user_ids)
+    # print(embeddings)
+    
+    # return le, classifier
 
-            if processor.found_face_data is not None:
-                user_ids.append(user_id)
-                
-                face_embedding = facenet_model.embeddings(processor.get_reshaped_dims())
-                
-                user_face_embedings.append(face_embedding)
-        
-        
-        return (user_ids, user_face_embedings)
-    else:
-        return ([], [])
 
 
 facenet_model = FaceNet() #facenet512
@@ -97,12 +96,7 @@ def signup_handler():
         img = PilImage.open(io.BytesIO(base64.decodebytes(bytes(base64Image, "utf-8"))))
         
         img.save(f'{os.path.join(raw_folder_path, new_user_id)}\\{str(image_id)}.jpeg')
-    
-    #retrain
-    
-    trainDataSet = prep(new_user_id)
-    print(trainDataSet)
-    
+
     return "user created"
 
 
