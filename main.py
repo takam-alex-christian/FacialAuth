@@ -4,19 +4,14 @@ from flask_cors import CORS, cross_origin
 
 import bson
 
-from custom_packages import ImageProcessor
+from custom_packages import ImageProcessor, cos_similarity
 from services import UserManager, EmbeddingManager
 
-import numpy as np
 import io, base64
 from PIL import Image as PilImage
 import os
 
-from sklearn.svm import SVC
-from sklearn.preprocessing import LabelEncoder
-
 from keras_facenet import FaceNet
-
 
 from pymongo import MongoClient
 
@@ -26,15 +21,10 @@ raw_folder_path = os.path.join(os.getcwd(), "res", "raw")
 prepped_folder_path = os.path.join(os.getcwd(), "res", "prepped")
 
 
-
-"""
-create neccesary folders
-
-"""
-
 mongo_client = MongoClient(
     "mongodb://127.0.0.1:27017/?directConnection=true&serverSelectionTimeoutMS=2000&appName=mongosh+2.2.5"
 )
+
 mongo_fa_db = mongo_client["facialAuth"]
 
 app = Flask(__name__)
@@ -45,12 +35,10 @@ user_manager = UserManager(mongo_db=mongo_fa_db)
 trained_le = joblib.load(f"{os.path.join(os.getcwd(), "svm_model")}\\le.gz")
 trained_classifier = joblib.load(f"{os.path.join(os.getcwd(), "svm_model")}\\classifier.gz")
 
+CORS(app, support_credentials=True)
 @app.route("/", methods=["GET"])
 def index():
-    return "hello world"
-
-
-CORS(app, support_credentials=True)
+    return ""
 
 
 @app.route("/signup", methods=["POST"])
@@ -90,6 +78,7 @@ def login_handler():
 
     prediction = None
     
+    
     base64Image = str(json_data.get("image"))
     base64Image = base64Image.split("data:image/jpeg;base64,")[-1]
 
@@ -97,9 +86,10 @@ def login_handler():
 
     img = PilImage.open(io.BytesIO(base64.decodebytes(bytes(base64Image, "utf-8"))))
 
-    img.save(f"{os.path.join(raw_folder_path, "tmp")}\\{str(image_id)}.jpeg")
+    img.save(f"{os.path.join(raw_folder_path, "tmp")}\\{str(image_id)}.jpg")
+
     
-    processor = ImageProcessor(src=f"{os.path.join(raw_folder_path, "tmp")}\\{str(image_id)}.jpeg")
+    processor = ImageProcessor(src=os.path.join(raw_folder_path, "tmp", f"{str(image_id)}.jpg"))
     
     
     # load label encoder and classifier
@@ -108,9 +98,37 @@ def login_handler():
     
     if processor.found_face_data is not None:
         test_emb = facenet_model.embeddings(processor.get_reshaped_dims())
+        
+        # print(test_emb)
 
         prediction = le.inverse_transform(classifier.predict(test_emb))
-        return {"authed": True, "prediction": prediction[0]}
+        
+        # compare embeding to any preprocessed image to check for false positive
+        
+        predicted_user_prepped_folder = os.path.join(os.getcwd(), "res", "prepped", prediction[0])
+        predicted_user_raw_folder = os.path.join(os.getcwd(), "res", "raw", prediction[0])
+        
+        predicted_user_sample_prepped = ImageProcessor(src=f"{predicted_user_prepped_folder}\\{os.listdir(predicted_user_prepped_folder)[0]}", output_folder="")
+        
+        old_emb = facenet_model.embeddings(predicted_user_sample_prepped.get_reshaped_dims())[0]
+        print(len(old_emb))
+        print(len(test_emb[0]))
+        
+        cosine_similarity = cos_similarity(old_emb, test_emb[0])
+        
+        if cosine_similarity < 0.5:
+            verified = True
+            img.save(f"{os.path.join(predicted_user_raw_folder, f"{str(image_id)}.jpg")}")
+        else:
+            verified = False
+        
+        print(prediction)
+        print(cosine_similarity)
+        
+        
+            
+        
+        return {"authed": True, "user_id": prediction[0], "verified": verified, "username": user_manager.get_user(prediction[0]) }
     # if login is successfull save image as raw
     
     return {"authed": False, "prediction": None}

@@ -37,9 +37,9 @@ class UserManager(object):
         """
         
         if user_id is None:
-            return json_util.dumps(self.users_collection.find_one())
+            return self.users_collection.find_one()["username"]
         else:
-            return json_util.dumps(self.users_collection.find_one({"_id": ObjectId(user_id)}))
+            return self.users_collection.find_one({"_id": ObjectId(user_id)})["username"]
     
     def get_users_id(self):
         """

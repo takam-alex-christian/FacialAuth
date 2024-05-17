@@ -25,7 +25,7 @@ class ImageProcessor(object):
     processed_image = np.array([])
     
     
-    def __init__(self, src,output_folder="", keep_ratio= False):
+    def __init__(self, src="",output_folder="", keep_ratio= False):
         self.src = src
         self.output_folder = output_folder
         
@@ -54,8 +54,12 @@ class ImageProcessor(object):
             if len(self.output_folder) != 0:
                 #store image
                 self.store_processed_image()
-        
-        
+    
+    def set_imraw(self, im_data):
+        self.image_raw = im_data
+        self.processed_image = np.array(self.image_raw)
+    
+
     def get_face(self):
         
         
@@ -147,6 +151,10 @@ class ImageProcessor(object):
         cv2.imwrite(os.path.join(self.output_folder, os.path.basename(self.src)), self.processed_image)
         return self.processed_image
     
+    def store_processed_image_to(self, output_folder, file_id):
+        cv2.imwrite(f"{output_folder}\\{file_id}.jpg", self.processed_image)
+        return self.processed_image
+    
     def get_processed_image(self): # just returns processed image as a numpy array
         return self.processed_image
     
@@ -161,4 +169,17 @@ class ImageProcessor(object):
             
         cv2.waitKey(0)
         cv2.destroyAllWindows()
+
+def cos_similarity(source_emb, test_emb):
+    """
+
+    """
+    
+    a = np.matmul(np.transpose(source_emb), test_emb)
+ 
+    b = np.matmul(np.transpose(source_emb), source_emb)
+    c = np.matmul(np.transpose(test_emb), test_emb)
+    
+    return 1 - (a / (np.sqrt(b) * np.sqrt(c)))
+        
         

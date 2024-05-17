@@ -94,6 +94,6 @@ joblib.dump(classifier, f"{os.path.join(os.getcwd(), "svm_model")}\\classifier.g
 # le = joblib.load(f"{os.path.join(os.getcwd(), "svm_model")}\\le.gz")
 # classifier = joblib.load(f"{os.path.join(os.getcwd(), "svm_model")}\\classifier.gz")
 
-prediction = le.inverse_transform(classifier.predict(test_emb))
+# prediction = le.inverse_transform(classifier.predict(test_emb))
 
-print(prediction)
+# print(prediction)
